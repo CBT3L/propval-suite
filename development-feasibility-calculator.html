@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevFeas — Development Feasibility Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf7;--bg2:#ffffff;--bg3:#f3f2ed;--bg4:#ebe9e2;
+  --text:#1c1b18;--text2:#6b6a63;--text3:#a8a79f;
+  --border:#e4e2da;--border2:#ccc9bf;
+  --ink:#1c1b18;
+  --lime:#2d6a4f;--lime2:#40916c;--lime-bg:#d8f3dc;--lime-border:#b7e4c7;
+  --red:#9b2335;--red-bg:#fce8ea;--red-border:#f5b8be;
+  --amber:#92600a;--amber-bg:#fef3cd;--amber-border:#f9d87a;
+  --blue:#1e3a5f;--blue-bg:#dbeafe;--blue-border:#93c5fd;
+  --r:8px;--rl:14px;--rxl:20px;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font:'IBM Plex Sans',system-ui,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,0.05),0 4px 12px rgba(0,0,0,0.04);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+header{background:var(--ink);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-family:var(--font-display);font-size:20px;color:#fff;letter-spacing:-0.01em}
+.brand em{font-style:italic;color:rgba(255,255,255,0.5);font-weight:400}
+.header-tag{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase}
+
+/* PAGE */
+.page{max-width:1060px;margin:0 auto;padding:2.5rem 2rem 5rem}
+
+/* HERO */
+.hero{padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2.5rem;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem}
+@media(max-width:640px){.hero{grid-template-columns:1fr}}
+.hero-tag{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--lime2);margin-bottom:10px}
+.hero-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);line-height:1.15;letter-spacing:-0.02em;margin-bottom:10px}
+.hero-title em{font-style:italic;color:var(--text2)}
+.hero-sub{font-size:13px;color:var(--text2);max-width:480px;line-height:1.75}
+.hero-aside{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem 1.5rem;min-width:180px;text-align:center}
+.hero-aside-val{font-family:var(--font-display);font-size:1.8rem;color:var(--ink);line-height:1}
+.hero-aside-label{font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px}
+
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:680px){.two-col,.three-col{grid-template-columns:1fr}}
+
+/* SECTION */
+.section-label{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-wrap{margin-bottom:2rem}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;box-shadow:var(--shadow);margin-bottom:16px}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3)}
+.field .hint{font-size:11px;color:var(--text3);line-height:1.5;margin-top:2px}
+input[type=number],input[type=text],select,textarea{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:14px;padding:9px 12px;width:100%;outline:none;-webkit-appearance:none;transition:border-color 0.18s,background 0.18s}
+input:focus,select:focus{border-color:var(--lime2);background:#fff}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8a79f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+option{background:#fff}
+.input-wrap{position:relative;display:flex;align-items:center}
+.input-prefix{position:absolute;left:12px;font-size:13px;color:var(--text3);pointer-events:none}
+.input-suffix{position:absolute;right:12px;font-size:13px;color:var(--text3);pointer-events:none}
+.input-wrap input{padding-left:22px}
+.input-wrap.suf input{padding-right:36px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* SLIDER */
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--border2);border-radius:999px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--lime2);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.slider-val{font-size:13px;font-weight:600;color:var(--lime2);min-width:50px;text-align:right}
+
+/* COST ITEM */
+.cost-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:12px}
+.cost-item:last-child{border-bottom:none}
+.cost-label{font-size:13px;color:var(--text2);flex:1}
+.cost-label small{display:block;font-size:11px;color:var(--text3);margin-top:1px}
+.cost-input{width:130px;flex-shrink:0}
+
+/* BUTTON */
+.btn-calc{width:100%;padding:14px;background:var(--ink);border:none;border-radius:var(--rl);color:#fff;font-family:var(--font-display);font-size:16px;font-style:italic;cursor:pointer;transition:all 0.18s;margin-top:1.5rem;letter-spacing:0.01em}
+.btn-calc:hover{background:#333;transform:translateY(-1px)}
+
+/* RESULTS */
+.results{display:none;animation:up 0.4s ease}
+.results.show{display:block}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* FEASIBILITY VERDICT */
+.feas-verdict{border-radius:var(--rxl);padding:2rem 2.5rem;margin-bottom:2rem;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center}
+.feas-verdict.viable{background:var(--lime-bg);border:1.5px solid var(--lime-border)}
+.feas-verdict.marginal{background:var(--amber-bg);border:1.5px solid var(--amber-border)}
+.feas-verdict.infeasible{background:var(--red-bg);border:1.5px solid var(--red-border)}
+.fv-tag{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px}
+.feas-verdict.viable .fv-tag{color:var(--lime2)}
+.feas-verdict.marginal .fv-tag{color:var(--amber)}
+.feas-verdict.infeasible .fv-tag{color:var(--red)}
+.fv-title{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.5rem);line-height:1.1;margin-bottom:8px}
+.feas-verdict.viable .fv-title{color:var(--lime)}
+.feas-verdict.marginal .fv-title{color:var(--amber)}
+.feas-verdict.infeasible .fv-title{color:var(--red)}
+.fv-sub{font-size:13px;color:var(--text2);line-height:1.7}
+.fv-margin{text-align:center}
+.fv-margin-val{font-family:var(--font-display);font-size:3rem;line-height:1}
+.feas-verdict.viable .fv-margin-val{color:var(--lime)}
+.feas-verdict.marginal .fv-margin-val{color:var(--amber)}
+.feas-verdict.infeasible .fv-margin-val{color:var(--red)}
+.fv-margin-label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-top:4px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:2rem}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem;box-shadow:var(--shadow)}
+.kpi.dark{background:var(--ink);border-color:var(--ink)}
+.kpi-label{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.kpi.dark .kpi-label{color:rgba(255,255,255,0.45)}
+.kpi-val{font-family:var(--font-display);font-size:1.5rem;color:var(--text);line-height:1.2}
+.kpi.dark .kpi-val{color:#fff}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.kpi.dark .kpi-sub{color:rgba(255,255,255,0.35)}
+
+/* WATERFALL CHART */
+.waterfall{display:flex;align-items:flex-end;gap:8px;height:200px;padding:0 4px;margin:1.25rem 0}
+.wf-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.wf-val{font-size:10px;font-weight:600;color:var(--text2);text-align:center;line-height:1.2}
+.wf-bar{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+.wf-label{font-size:10px;color:var(--text3);text-align:center;line-height:1.3;margin-top:4px}
+.wf-baseline{height:1px;background:var(--border2);margin:0 4px}
+
+/* BREAKDOWN TABLE */
+.bd-table{width:100%;border-collapse:collapse}
+.bd-table tr{border-bottom:1px solid var(--border)}
+.bd-table tr:last-child{border-bottom:none}
+.bd-table td{padding:11px 8px;font-size:14px}
+.bd-table td:first-child{color:var(--text2)}
+.bd-table td:last-child{text-align:right;font-weight:500;color:var(--text)}
+.bd-table .cost-row td:last-child{color:var(--red)}
+.bd-table .income-row td{color:var(--lime)}
+.bd-table .total-row td{font-weight:700;font-size:15px;border-top:2px solid var(--border2);padding-top:14px}
+.bd-table .sub-row td{font-size:12px;color:var(--text3);padding-top:3px;padding-bottom:3px}
+.bd-table .section-row td{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);padding-top:14px;padding-bottom:4px}
+
+/* SENSITIVITY */
+.sens-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.sens-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.25rem}
+.sens-title{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.sens-val{font-family:var(--font-display);font-size:1.2rem;margin-bottom:2px}
+.sens-desc{font-size:11px;color:var(--text3);line-height:1.5}
+
+/* TABS */
+.tab-nav{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.tab-link{padding:8px 16px;border:none;border-bottom:2px solid transparent;background:transparent;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;margin-bottom:-1px;transition:all 0.15s}
+.tab-link.active{color:var(--lime2);border-bottom-color:var(--lime2);font-weight:600}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* NOTE BOX */
+.note-box{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r);padding:1rem 1.25rem;margin-top:1.25rem}
+.note-box-title{font-size:12px;font-weight:600;color:var(--blue);margin-bottom:4px}
+.note-box p{font-size:12px;color:var(--text2);line-height:1.7}
+
+/* DISCLAIMER */
+.disclaimer{margin-top:2rem;font-size:11px;color:var(--text3);line-height:1.7;padding:1rem 1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Dev<em>Feas</em></div>
+  <div class="header-tag">Development Feasibility Calculator · Australia</div>
+</header>
+
+<div class="page">
+
+  <div class="hero">
+    <div>
+      <div class="hero-tag">Residential Development Analysis</div>
+      <h1 class="hero-title">Is the deal <em>actually</em><br>worth doing?</h1>
+      <p class="hero-sub">Model the full cost stack of a residential development — land, construction, holding costs, GST, consultants, and contingencies — against projected end values to determine feasibility before you commit.</p>
+    </div>
+    <div class="hero-aside">
+      <div class="hero-aside-val">15–20%</div>
+      <div class="hero-aside-label">Minimum developer<br>margin (industry standard)</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- LEFT: PROJECT SETUP -->
+    <div>
+      <div class="section-label">Project setup</div>
+      <div class="card">
+        <div class="field">
+          <label>Project Type</label>
+          <select id="projType" onchange="updateDefaults()">
+            <option value="duplex">Duplex (2 dwellings)</option>
+            <option value="triplex">Triplex (3 dwellings)</option>
+            <option value="townhouse4">Townhouse — 4 dwellings</option>
+            <option value="townhouse6" selected>Townhouse — 6 dwellings</option>
+            <option value="apartments">Apartments (6–12 units)</option>
+            <option value="custom">Custom</option>
+          </select>
+          <span class="hint">Sets default construction cost rates</span>
+        </div>
+        <div class="field">
+          <label>Number of Dwellings</label>
+          <input type="number" id="numDwellings" value="6" min="1" max="50" oninput="updateDefaults()">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Avg Floor Area (m²)</label>
+            <input type="number" id="avgFloorArea" value="160" oninput="">
+            <span class="hint">Per dwelling</span>
+          </div>
+          <div class="field">
+            <label>Target End Value ($)</label>
+            <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="avgEndValue" value="850000" oninput=""></div>
+            <span class="hint">Per dwelling (GRV)</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Real Estate Agent Commission</label>
+          <div class="slider-row">
+            <input type="range" id="agentComm" min="1" max="3.5" value="2" step="0.25" oninput="document.getElementById('agentCommVal').textContent=parseFloat(this.value).toFixed(2)+'%'">
+            <span class="slider-val" id="agentCommVal">2.00%</span>
+          </div>
+          <span class="hint">Applied to gross realisation value</span>
+        </div>
+        <div class="field">
+          <label>Marketing Budget ($)</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="marketing" value="25000"></div>
+        </div>
+      </div>
+
+      <div class="section-label">Land & acquisition</div>
+      <div class="card">
+        <div class="field">
+          <label>Land Purchase Price ($)</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="landPrice" value="1200000" oninput="calcStampDuty()"></div>
+        </div>
+        <div class="field">
+          <label>Stamp Duty ($)</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="stampDuty" value="66350"></div>
+          <span class="hint" id="stampDutyHint">Auto-estimated from purchase price (VIC scale)</span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Legal / Conveyancing ($)</label>
+            <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="legal" value="8000"></div>
+          </div>
+          <div class="field">
+            <label>Due Diligence ($)</label>
+            <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="dueDiligence" value="5000"></div>
+            <span class="hint">Soil tests, surveys, title</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Financing</div>
+      <div class="card">
+        <div class="field">
+          <label>Construction Finance Rate (%)</label>
+          <div class="slider-row">
+            <input type="range" id="financeRate" min="5" max="12" value="7.5" step="0.25" oninput="document.getElementById('financeRateVal').textContent=parseFloat(this.value).toFixed(2)+'%'">
+            <span class="slider-val" id="financeRateVal">7.50%</span>
+          </div>
+          <span class="hint">Development finance typically 7–10% p.a.</span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>LVR (%)</label>
+            <div class="slider-row">
+              <input type="range" id="lvr" min="50" max="80" value="65" step="1" oninput="document.getElementById('lvrVal').textContent=this.value+'%'">
+              <span class="slider-val" id="lvrVal">65%</span>
+            </div>
+            <span class="hint">Loan-to-value ratio (lenders typically 60–70% for dev)</span>
+          </div>
+          <div class="field">
+            <label>Project Duration (months)</label>
+            <input type="number" id="duration" value="18" min="6" max="60">
+            <span class="hint">Used to calculate holding costs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: COSTS -->
+    <div>
+      <div class="section-label">Construction costs</div>
+      <div class="card">
+        <div class="cost-item">
+          <div class="cost-label">Construction (Base Build)<small>Structure, fit-out, all trades</small></div>
+          <div class="cost-input"><div class="input-wrap suf"><input type="number" id="constRate" value="2200" oninput=""><span class="input-suffix">/m²</span></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Site Works & Demolition<small>Earthworks, retaining, demo</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="siteworks" value="80000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Landscaping & Driveways<small>External works on completion</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="landscaping" value="45000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Services & Connections<small>Water, sewage, power, NBN</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="services" value="35000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Contingency<small>Industry standard: 10–15%</small></div>
+          <div class="cost-input"><div class="input-wrap suf"><input type="number" id="contingencyPct" value="12" step="1"><span class="input-suffix">%</span></div></div>
+        </div>
+      </div>
+
+      <div class="section-label">Consultant & statutory fees</div>
+      <div class="card">
+        <div class="cost-item">
+          <div class="cost-label">Architect / Draftsperson<small>Design, documentation, CA</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="architect" value="55000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Town Planner<small>Planning permit, VCAT if required</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="planner" value="18000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Structural Engineer<small>Structural + civil design</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="structural" value="22000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Building Surveyor<small>Building permit, inspections</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="surveyor" value="14000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Council Contributions<small>Open space, infrastructure levies</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="councilContrib" value="28000"></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">GST on Construction<small>10% on new builds, net of input credits</small></div>
+          <div class="cost-input"><div class="input-wrap suf"><input type="number" id="gstPct" value="5" step="0.5"><span class="input-suffix">%</span></div></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">Project Manager<small>PM fee if engaged externally</small></div>
+          <div class="cost-input"><div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="pm" value="30000"></div></div>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="calculate()">Calculate Feasibility →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div style="margin-top:3rem;margin-bottom:1.5rem"><div class="section-label">Feasibility result</div></div>
+
+    <div class="feas-verdict" id="verdict">
+      <div>
+        <div class="fv-tag" id="vTag">—</div>
+        <div class="fv-title" id="vTitle">—</div>
+        <div class="fv-sub" id="vSub">—</div>
+      </div>
+      <div class="fv-margin">
+        <div class="fv-margin-val" id="vMarginPct">—</div>
+        <div class="fv-margin-label">Developer Margin<br>on cost</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi dark"><div class="kpi-label">Gross Realisation</div><div class="kpi-val" id="kGRV">—</div><div class="kpi-sub">total end value</div></div>
+      <div class="kpi"><div class="kpi-label">Total Project Cost</div><div class="kpi-val" id="kTPC">—</div><div class="kpi-sub">all-in cost</div></div>
+      <div class="kpi"><div class="kpi-label">Developer Profit</div><div class="kpi-val" id="kProfit">—</div><div class="kpi-sub">gross profit $</div></div>
+      <div class="kpi"><div class="kpi-label">Return on Cost</div><div class="kpi-val" id="kROC">—</div><div class="kpi-sub">profit / total cost</div></div>
+      <div class="kpi"><div class="kpi-label">Return on Equity</div><div class="kpi-val" id="kROE">—</div><div class="kpi-sub">profit / equity in</div></div>
+      <div class="kpi"><div class="kpi-label">Cost per Dwelling</div><div class="kpi-val" id="kCPD">—</div><div class="kpi-sub">avg all-in cost</div></div>
+    </div>
+
+    <div class="card">
+      <div class="tab-nav">
+        <button class="tab-link active" onclick="openTab('breakdown',this)">Cost Breakdown</button>
+        <button class="tab-link" onclick="openTab('waterfall',this)">Waterfall</button>
+        <button class="tab-link" onclick="openTab('sensitivity',this)">Sensitivity</button>
+        <button class="tab-link" onclick="openTab('cashflow',this)">Cashflow Timing</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-breakdown">
+        <table class="bd-table" id="breakdownTable"></table>
+      </div>
+
+      <div class="tab-panel" id="tab-waterfall">
+        <p style="font-size:13px;color:var(--text3);margin-bottom:0.5rem">How each cost layer reduces your gross realisation value</p>
+        <div class="waterfall" id="waterfallChart"></div>
+        <div class="wf-baseline"></div>
+        <div id="waterfallLegend" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:0.75rem"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-sensitivity">
+        <p style="font-size:13px;color:var(--text3);margin-bottom:1rem">How does feasibility change if one assumption shifts?</p>
+        <div class="sens-grid" id="sensitivityGrid"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-cashflow">
+        <p style="font-size:13px;color:var(--text3);margin-bottom:1rem">Typical cashflow phasing for a residential development project</p>
+        <table class="bd-table" id="cashflowTable"></table>
+        <div class="note-box">
+          <div class="note-box-title">About development cashflow</div>
+          <p>Development projects typically front-load costs (land, consultants, DA) in months 1–6, with the bulk of construction spend in the middle phase. Revenue is recognised only at settlement — often 12–18 months after construction begins. This cashflow profile is why development finance is expensive: the lender carries the risk for an extended period before drawdown is repaid.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> This tool produces indicative feasibility estimates only. Development projects involve complex variables including planning risk, construction cost escalation, market movements, and finance conditions not fully captured here. Engage a qualified development manager, quantity surveyor, and legal adviser before committing to any development. GST calculations are simplified — consult a tax adviser for margin scheme eligibility. All amounts in AUD.
+    </div>
+  </div>
+
+</div>
+
+<script>
+function fmt(n){return '$'+Math.round(Math.abs(n)).toLocaleString('en-AU')}
+function fmtPct(n){return n.toFixed(1)+'%'}
+function openTab(name,btn){
+  document.querySelectorAll('.tab-link').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function calcStampDuty(){
+  const p = parseFloat(document.getElementById('landPrice').value)||0;
+  const sd = p<=600000 ? p*0.055 : 33000+(p-600000)*0.065;
+  document.getElementById('stampDuty').value = Math.round(sd);
+  document.getElementById('stampDutyHint').textContent = 'Auto-estimated: '+fmt(sd)+' (VIC sliding scale)';
+}
+
+function updateDefaults(){
+  const t = document.getElementById('projType').value;
+  const n = parseInt(document.getElementById('numDwellings').value)||6;
+  const rates = {duplex:2400,triplex:2300,townhouse4:2250,townhouse6:2200,apartments:2800,custom:2200};
+  document.getElementById('constRate').value = rates[t]||2200;
+}
+
+function calculate(){
+  const n       = parseInt(document.getElementById('numDwellings').value)||1;
+  const area    = parseFloat(document.getElementById('avgFloorArea').value)||160;
+  const endVal  = parseFloat(document.getElementById('avgEndValue').value)||0;
+  const agComm  = parseFloat(document.getElementById('agentComm').value)/100;
+  const mktg    = parseFloat(document.getElementById('marketing').value)||0;
+  const land    = parseFloat(document.getElementById('landPrice').value)||0;
+  const sd      = parseFloat(document.getElementById('stampDuty').value)||0;
+  const legal   = parseFloat(document.getElementById('legal').value)||0;
+  const dd      = parseFloat(document.getElementById('dueDiligence').value)||0;
+  const rate    = parseFloat(document.getElementById('financeRate').value)/100;
+  const lvr     = parseFloat(document.getElementById('lvr').value)/100;
+  const dur     = parseFloat(document.getElementById('duration').value)||18;
+  const cRate   = parseFloat(document.getElementById('constRate').value)||2200;
+  const site    = parseFloat(document.getElementById('siteworks').value)||0;
+  const land2   = parseFloat(document.getElementById('landscaping').value)||0;
+  const svc     = parseFloat(document.getElementById('services').value)||0;
+  const contPct = parseFloat(document.getElementById('contingencyPct').value)/100;
+  const arch    = parseFloat(document.getElementById('architect').value)||0;
+  const plan    = parseFloat(document.getElementById('planner').value)||0;
+  const struct  = parseFloat(document.getElementById('structural').value)||0;
+  const surv    = parseFloat(document.getElementById('surveyor').value)||0;
+  const council = parseFloat(document.getElementById('councilContrib').value)||0;
+  const gstPct  = parseFloat(document.getElementById('gstPct').value)/100;
+  const pm      = parseFloat(document.getElementById('pm').value)||0;
+
+  const GRV           = endVal * n;
+  const agentFee      = GRV * agComm;
+  const netRealise    = GRV - agentFee - mktg;
+
+  const landTotal     = land + sd + legal + dd;
+  const baseConst     = cRate * area * n;
+  const otherConst    = site + land2 + svc;
+  const constSubtotal = baseConst + otherConst;
+  const contingency   = constSubtotal * contPct;
+  const constTotal    = constSubtotal + contingency;
+  const gst           = constTotal * gstPct;
+  const consultants   = arch + plan + struct + surv + council + pm;
+
+  // Holding / finance costs: interest on loan for project duration
+  const totalHardCost = landTotal + constTotal + gst + consultants;
+  const loanAmt       = totalHardCost * lvr;
+  const holdingCost   = loanAmt * rate * (dur / 12);
+
+  const sellingCost   = agentFee + mktg;
+  const TPC           = landTotal + constTotal + gst + consultants + holdingCost + sellingCost;
+  const profit        = GRV - TPC;
+  const marginOnCost  = (profit / TPC) * 100;
+  const marginOnGRV   = (profit / GRV) * 100;
+  const equity        = TPC * (1 - lvr);
+  const roe           = (profit / equity) * 100;
+  const cpd           = TPC / n;
+
+  // Verdict
+  let vClass, vTag, vTitle, vSub;
+  if(marginOnCost >= 20){
+    vClass='viable';vTag='Feasible — Strong Margin';
+    vTitle=fmtPct(marginOnCost)+' return on cost';
+    vSub=`This project meets and exceeds the industry standard minimum margin of 15–20%. At ${fmtPct(marginOnCost)} on cost, there is buffer for cost overruns and market softening. Proceed to detailed quantity surveying and planning due diligence.`;
+  } else if(marginOnCost >= 15){
+    vClass='viable';vTag='Feasible — Acceptable Margin';
+    vTitle=fmtPct(marginOnCost)+' return on cost';
+    vSub=`This project meets the minimum threshold of 15% return on cost, which is the typical lender requirement for development finance approval. Margins are tight — any cost overrun or end value reduction would erode feasibility quickly. Recommend stress-testing assumptions.`;
+  } else if(marginOnCost >= 8){
+    vClass='marginal';vTag='Marginal — Proceed with Caution';
+    vTitle=fmtPct(marginOnCost)+' return on cost';
+    vSub=`The margin sits below the industry standard minimum of 15%. This project may still proceed if the developer has a high risk tolerance, owns the land at below-market value, or can reduce construction costs. Most development lenders will not finance at this margin.`;
+  } else {
+    vClass='infeasible';vTag='Infeasible at Current Settings';
+    vTitle=fmtPct(marginOnCost)+' return on cost';
+    vSub=`The project does not achieve a viable return. The total cost exceeds or nearly matches gross realisation. Review land price, number of dwellings, end values, and construction costs. A residual land value approach may help identify the maximum price you should pay for the land.`;
+  }
+  document.getElementById('verdict').className='feas-verdict '+vClass;
+  document.getElementById('vTag').textContent=vTag;
+  document.getElementById('vTitle').textContent=vTitle;
+  document.getElementById('vSub').textContent=vSub;
+  document.getElementById('vMarginPct').textContent=fmtPct(marginOnCost);
+  document.getElementById('vMarginPct').style.color = vClass==='infeasible'?'var(--red)':vClass==='marginal'?'var(--amber)':'var(--lime)';
+
+  document.getElementById('kGRV').textContent=fmt(GRV);
+  document.getElementById('kTPC').textContent=fmt(TPC);
+  document.getElementById('kProfit').textContent=(profit>=0?'+':'-')+fmt(profit);
+  document.getElementById('kProfit').style.color=profit>=0?'var(--lime)':'var(--red)';
+  document.getElementById('kROC').textContent=fmtPct(marginOnCost);
+  document.getElementById('kROE').textContent=fmtPct(roe);
+  document.getElementById('kCPD').textContent=fmt(cpd);
+
+  // BREAKDOWN TABLE
+  document.getElementById('breakdownTable').innerHTML=`
+    <tr class="section-row"><td colspan="2">Income</td></tr>
+    <tr class="income-row"><td>Gross Realisation Value (GRV) — ${n} dwellings × ${fmt(endVal)}</td><td>+${fmt(GRV)}</td></tr>
+    <tr class="sub-row"><td>Less agent commission (${fmtPct(agComm*100)})</td><td>-${fmt(agentFee)}</td></tr>
+    <tr class="sub-row"><td>Less marketing</td><td>-${fmt(mktg)}</td></tr>
+    <tr><td><strong>Net Realisation</strong></td><td>${fmt(netRealise)}</td></tr>
+    <tr class="section-row"><td colspan="2">Land & Acquisition Costs</td></tr>
+    <tr class="cost-row"><td>Land purchase price</td><td>-${fmt(land)}</td></tr>
+    <tr class="cost-row"><td>Stamp duty</td><td>-${fmt(sd)}</td></tr>
+    <tr class="cost-row"><td>Legal / conveyancing</td><td>-${fmt(legal)}</td></tr>
+    <tr class="cost-row"><td>Due diligence</td><td>-${fmt(dd)}</td></tr>
+    <tr class="section-row"><td colspan="2">Construction Costs</td></tr>
+    <tr class="cost-row"><td>Base build (${n} dwellings × ${area}m² × $${cRate}/m²)</td><td>-${fmt(baseConst)}</td></tr>
+    <tr class="cost-row"><td>Site works & demolition</td><td>-${fmt(site)}</td></tr>
+    <tr class="cost-row"><td>Landscaping & driveways</td><td>-${fmt(land2)}</td></tr>
+    <tr class="cost-row"><td>Services & connections</td><td>-${fmt(svc)}</td></tr>
+    <tr class="cost-row"><td>Contingency (${fmtPct(contPct*100)})</td><td>-${fmt(contingency)}</td></tr>
+    <tr class="cost-row"><td>GST on construction (net, ${fmtPct(gstPct*100)})</td><td>-${fmt(gst)}</td></tr>
+    <tr class="section-row"><td colspan="2">Consultant & Statutory Fees</td></tr>
+    <tr class="cost-row"><td>Architect / draftsperson</td><td>-${fmt(arch)}</td></tr>
+    <tr class="cost-row"><td>Town planner</td><td>-${fmt(plan)}</td></tr>
+    <tr class="cost-row"><td>Structural engineer</td><td>-${fmt(struct)}</td></tr>
+    <tr class="cost-row"><td>Building surveyor</td><td>-${fmt(surv)}</td></tr>
+    <tr class="cost-row"><td>Council contributions</td><td>-${fmt(council)}</td></tr>
+    <tr class="cost-row"><td>Project manager</td><td>-${fmt(pm)}</td></tr>
+    <tr class="section-row"><td colspan="2">Financing & Holding</td></tr>
+    <tr class="cost-row"><td>Development finance (${fmtPct(rate*100)} p.a. on ${fmt(loanAmt)} for ${dur} months)</td><td>-${fmt(holdingCost)}</td></tr>
+    <tr class="total-row"><td>Total Project Cost</td><td>-${fmt(TPC)}</td></tr>
+    <tr class="total-row" style="color:${profit>=0?'var(--lime)':'var(--red)'}"><td><strong>Developer Profit</strong></td><td><strong>${profit>=0?'+':'-'}${fmt(profit)}</strong></td></tr>
+  `;
+
+  // WATERFALL
+  const wfItems = [
+    {label:'Gross\nRealise.',val:GRV,color:'#2d6a4f'},
+    {label:'Land\nCosts',val:landTotal,color:'#9b2335'},
+    {label:'Construction',val:constTotal+gst,color:'#92600a'},
+    {label:'Consultants',val:consultants,color:'#6b21a8'},
+    {label:'Holding\nCosts',val:holdingCost,color:'#1e3a5f'},
+    {label:'Selling\nCosts',val:sellingCost,color:'#374151'},
+    {label:'Profit',val:Math.abs(profit),color:profit>=0?'#2d6a4f':'#9b2335'},
+  ];
+  const maxWF = GRV;
+  document.getElementById('waterfallChart').innerHTML = wfItems.map(w=>`
+    <div class="wf-col">
+      <div class="wf-val">${fmt(w.val)}</div>
+      <div class="wf-bar" style="background:${w.color};height:${Math.max(4,w.val/maxWF*160).toFixed(0)}px"></div>
+      <div class="wf-label">${w.label.replace('\n','<br>')}</div>
+    </div>`).join('');
+  document.getElementById('waterfallLegend').innerHTML = wfItems.map(w=>
+    `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:${w.color}"></div>${w.label.replace('\n',' ')}</div>`
+  ).join('');
+
+  // SENSITIVITY
+  const sensTests=[
+    {title:'End value −5%',endVal:endVal*0.95},
+    {title:'End value +5%',endVal:endVal*1.05},
+    {title:'Construction cost +10%',cRate:cRate*1.10},
+    {title:'Construction cost −10%',cRate:cRate*0.90},
+    {title:'Duration +6 months',dur:dur+6},
+    {title:'Rate rises +1%',rate:(rate*100+1)/100},
+    {title:'1 less dwelling',n:Math.max(1,n-1)},
+    {title:'1 extra dwelling',n:n+1},
+  ];
+  function quickFeas(ov){
+    const _n=ov.n||n,_area=area,_ev=ov.endVal||endVal,_cRate=ov.cRate||cRate,_dur=ov.dur||dur,_rate=ov.rate||rate;
+    const _GRV=_ev*_n,_aF=_GRV*agComm,_bc=_cRate*_area*_n,_oc=site+land2+svc,_cs=_bc+_oc,_cg=_cs*contPct,_ct=_cs+_cg,_g=_ct*gstPct;
+    const _hc=(_landTotal=landTotal,(_ct+_g+consultants)*lvr)*_rate*(_dur/12);
+    const _TPC=landTotal+_ct+_g+consultants+_hc+_aF+mktg;
+    const _p=_GRV-_TPC;
+    const _m=(_p/_TPC)*100;
+    return {margin:_m,profit:_p};
+  }
+  document.getElementById('sensitivityGrid').innerHTML=sensTests.map(s=>{
+    const r=quickFeas(s);
+    const color=r.margin>=20?'var(--lime)':r.margin>=15?'var(--lime2)':r.margin>=8?'var(--amber)':'var(--red)';
+    return `<div class="sens-card"><div class="sens-title">${s.title}</div><div class="sens-val" style="color:${color}">${fmtPct(r.margin)} margin</div><div class="sens-desc">Profit: ${r.profit>=0?'+':'-'}${fmt(r.profit)}</div></div>`;
+  }).join('');
+
+  // CASHFLOW TIMING
+  const phases=[
+    {phase:'Pre-DA (Months 1–3)',items:['Land settlement + stamp duty','Legal & due diligence','Architect initial design','Town planner engagement'],pct:0.18},
+    {phase:'DA & Documentation (Months 3–8)',items:['Architect construction docs','Engineering consultants','Council contributions lodgement','Building permit'],pct:0.12},
+    {phase:'Construction — Early (Months 6–12)',items:['Site works & demolition','Slab & structure','Finance drawdown begins'],pct:0.30},
+    {phase:'Construction — Late (Months 12–18)',items:['Fit-out, fixtures, finishes','Landscaping & external works','Services connections'],pct:0.25},
+    {phase:'Completion & Settlement (Month 18+)',items:['Final inspections & OC','Agent marketing launch','Settlements received','Finance repaid'],pct:0.15},
+  ];
+  document.getElementById('cashflowTable').innerHTML=phases.map(p=>`
+    <tr class="section-row"><td colspan="2">${p.phase}</td></tr>
+    ${p.items.map(i=>`<tr><td>${i}</td><td style="text-align:right;color:var(--text3)">~${fmt(TPC*p.pct*(p.items.indexOf(i)===p.items.length-1?0.6:0.4/p.items.length))}</td></tr>`).join('')}
+  `).join('');
+
+  document.getElementById('results').classList.add('show');
+  setTimeout(()=>document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// Init
+window.addEventListener('load',()=>{calcStampDuty();updateDefaults();});
+</script>
+</body>
+</html>
